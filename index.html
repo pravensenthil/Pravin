@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Drainage Robotic System - Live Demo</title>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        h1 { color: #38bdf8; font-size: 20px; margin-bottom: 10px; }
+        .subtitle { color: #94a3b8; font-size: 14px; margin-bottom: 20px; }
+
+        .btn-test {
+            background-color: #0284c7;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);
+            transition: all 0.2s;
+        }
+        .btn-test:active { transform: scale(0.95); box-shadow: 0 2px 5px rgba(2, 132, 199, 0.4); }
+
+        .card {
+            background-color: #1e293b;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px auto;
+            max-width: 380px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            border: 1px solid #334155;
+        }
+
+        .status-label { font-size: 14px; color: #94a3b8; margin-bottom: 5px; }
+
+        .normal-text { color: #22c55e; font-size: 18px; font-weight: bold; }
+
+        .warning-active {
+            color: #ef4444;
+            font-size: 18px;
+            font-weight: bold;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink { 50% { opacity: 0.7; } }
+
+        /* --- Fan Styles (🌀 Working) --- */
+        #fanArea {
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px 0;
+        }
+
+        #fanIcon {
+            font-size: 60px;
+            display: inline-block;
+            transition: transform 0.3s;
+        }
+
+        .fan-spin {
+            animation: spin 0.5s linear infinite !important;
+        }
+
+        @keyframes spin { 
+            100% { transform: rotate(360deg); } 
+        }
+
+        /* --- Scoop & Throw Robot Styles --- */
+        #drainArea {
+            width: 100%;
+            height: 200px;
+            position: relative;
+            background: linear-gradient(180deg, #0f172a 0%, #090d16 100%);
+            overflow: hidden;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 2px solid #334155;
+        }
+
+        .drain-bottom {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 20px;
+            background-color: #3f2a14;
+            border-top: 2px solid #523a21;
+        }
+
+        #trashIcon {
+            position: absolute;
+            bottom: 15px;
+            left: 160px;
+            font-size: 24px;
+            z-index: 10;
+            display: none;
+            transform-origin: center;
+        }
+
+        .robot-base {
+            position: absolute;
+            bottom: 10px;
+            left: 20px;
+            font-size: 35px;
+            z-index: 5;
+        }
+
+        .robot-arm-main {
+            position: absolute;
+            bottom: 40px;
+            left: 45px;
+            width: 10px;
+            height: 80px;
+            background-color: #64748b;
+            border-radius: 5px;
+            transform-origin: bottom center;
+            transform: rotate(-30deg);
+            z-index: 4;
+            transition: transform 0.5s ease-out;
+        }
+
+        .robot-arm-fore {
+            position: absolute;
+            top: 0;
+            left: -2px;
+            width: 14px;
+            height: 70px;
+            background-color: #94a3b8;
+            border-radius: 5px;
+            transform-origin: top center;
+            transform: rotate(60deg);
+        }
+
+        .robot-gripper {
+            position: absolute;
+            bottom: -15px;
+            left: -5px;
+            font-size: 28px;
+            transform: rotate(-30deg);
+        }
+
+        /* --- ANIMATIONS --- */
+        .arm-main-scoop-action {
+            animation: mainArmScoopThrow 4s cubic-bezier(0.45, 0, 0.55, 1) forwards;
+        }
+
+        @keyframes mainArmScoopThrow {
+            0%   { transform: rotate(-30deg); }
+            15%  { transform: rotate(10deg); }
+            30%  { transform: rotate(40deg); }
+            45%  { transform: rotate(45deg); }
+            60%  { transform: rotate(-60deg); }
+            80%  { transform: rotate(-70deg); }
+            100% { transform: rotate(-30deg); }
+        }
+
+        .arm-fore-scoop-action {
+            animation: foreArmScoopThrow 4s cubic-bezier(0.45, 0, 0.55, 1) forwards;
+        }
+
+        @keyframes foreArmScoopThrow {
+            0%   { transform: rotate(60deg); }
+            15%  { transform: rotate(30deg); }
+            30%  { transform: rotate(20deg); }
+            45%  { transform: rotate(10deg); }
+            60%  { transform: rotate(80deg); }
+            80%  { transform: rotate(90deg); }
+            100% { transform: rotate(60deg); }
+        }
+
+        .trash-scoop-action {
+            display: block !important;
+            animation: trashScoopedFlung 4s cubic-bezier(0.45, 0, 0.55, 1) forwards;
+        }
+
+        @keyframes trashScoopedFlung {
+            0%   { bottom: 15px; left: 160px; transform: rotate(0deg) scale(1); opacity: 1; }
+            30%  { bottom: 15px; left: 160px; }
+            45%  { bottom: 25px; left: 135px; transform: rotate(-20deg); }
+            50%  { bottom: 60px; left: 110px; }
+            60%  { bottom: 120px; left: 50px; opacity: 1; }
+            70%  { bottom: 160px; left: -50px; transform: rotate(-180deg) scale(0.5); opacity: 0; }
+            100% { bottom: 15px; left: 160px; opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🤖 SMART DRAINAGE ROBOTIC SYSTEM</h1>
+    <div class="subtitle">AI Powered Waste Management</div>
+
+    <button class="btn-test" onclick="testDemo()">🧪 TEST DEMO NOW</button>
+
+    <!-- Gas Card -->
+    <div class="card">
+        <div class="status-label">Air Quality Status</div>
+        <div id="gasStatus" class="normal-text">Normal (OK)</div>
+        <div id="fanArea">
+            <div id="fanIcon">🌀</div>
+        </div>
+        <div style="color: #00ffff; font-size: 12px;">(Toxic Gas ➔ Exhaust Fan ON)</div>
+    </div>
+
+    <!-- Trash Card -->
+    <div class="card">
+        <div class="status-label">Drainage Blockage Status</div>
+        <div id="trashStatus" class="normal-text">Clean</div>
+        <div id="drainArea">
+            <div class="drain-bottom"></div>
+            <div id="trashIcon">🥫</div>
+            <div class="robot-base">🏗️</div>
+            <div id="robotArmMain" class="robot-arm-main">
+                <div id="robotArmFore" class="robot-arm-fore">
+                    <div class="robot-gripper">✊</div>
+                </div>
+            </div>
+        </div>
+        <div style="color: #00ffff; font-size: 12px; margin-top:5px;">(Trash ➔ Robotic Arm Scoops & Cleans)</div>
+    </div>
+
+    <script>
+        // வாய்ஸ் அலர்ட் 3 முறை பேசும் அமைப்பு
+        function speak(text) {
+            window.speechSynthesis.cancel(); 
+            for (let i = 0; i < 3; i++) {
+                let speech = new SpeechSynthesisUtterance(text);
+                speech.lang = 'en-US';
+                speech.rate = 1.0;
+                speech.pitch = 1.0;
+                window.speechSynthesis.speak(speech);
+            }
+        }
+
+        function triggerGasAlert() {
+            document.getElementById("gasStatus").innerText = "⚠️ WARNING: TOXIC GAS!";
+            document.getElementById("gasStatus").className = "warning-active";
+            document.getElementById("fanIcon").classList.add("fan-spin");
+            speak("Warning! Toxic Gas Detected!");
+        }
+
+        function triggerTrashAlert() {
+            document.getElementById("trashStatus").innerText = "♻️ TRASH DETECTED - CLEANING";
+            document.getElementById("trashStatus").className = "warning-active";
+            
+            document.getElementById("robotArmMain").classList.add("arm-main-scoop-action");
+            document.getElementById("robotArmFore").classList.add("arm-fore-scoop-action");
+            document.getElementById("trashIcon").classList.add("trash-scoop-action");
+            
+            speak("Trash Detected! Robotic Arm Scooping and Cleaning drain!");
+        }
+
+        function testDemo() {
+            document.getElementById("fanIcon").classList.remove("fan-spin");
+            document.getElementById("robotArmMain").classList.remove("arm-main-scoop-action");
+            document.getElementById("robotArmFore").classList.remove("arm-fore-scoop-action");
+            document.getElementById("trashIcon").classList.remove("trash-scoop-action");
+            
+            document.getElementById("gasStatus").className = "normal-text";
+            document.getElementById("gasStatus").innerText = "Normal (OK)";
+            document.getElementById("trashStatus").className = "normal-text";
+            document.getElementById("trashStatus").innerText = "Clean";
+
+            window.speechSynthesis.cancel();
+
+            setTimeout(triggerGasAlert, 500);
+            setTimeout(triggerTrashAlert, 5000);
+        }
+    </script>
+</body>
+</html>
