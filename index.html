@@ -1,204 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Drainage Robotic System</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #0d1b2a;
-            color: #ffffff;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        h1 {
-            color: #4cc9f0;
-            text-align: center;
-            font-size: 22px;
-            margin-bottom: 5px;
-        }
-
-        .subtitle {
-            color: #8d99ae;
-            font-size: 14px;
-            margin-bottom: 20px;
-        }
-
-        .btn-container {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .btn {
-            background: linear-gradient(135deg, #0077b6, #00b4d8);
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            font-size: 14px;
-            font-weight: bold;
-            border-radius: 25px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0, 180, 216, 0.4);
-            transition: 0.3s;
-        }
-
-        .btn-connect {
-            background: linear-gradient(135deg, #2a9d8f, #e76f51);
-        }
-
-        .btn:active {
-            transform: scale(0.95);
-        }
-
-        .card {
-            background-color: #1b263b;
-            border-radius: 15px;
-            padding: 20px;
-            width: 100%;
-            max-width: 350px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            text-align: center;
-            box-sizing: border-box;
-        }
-
-        .card h3 {
-            margin-top: 0;
-            color: #e0e1dd;
-            font-size: 16px;
-        }
-
-        .status-ok {
-            color: #2ec4b6;
-            font-weight: bold;
-            font-size: 18px;
-        }
-
-        .status-alert {
-            color: #e63946;
-            font-weight: bold;
-            font-size: 18px;
-        }
-
-        .icon-box {
-            font-size: 40px;
-            margin: 15px 0;
-        }
-
-        .action-text {
-            color: #4cc9f0;
-            font-size: 13px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Drainage Robotic System</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <h1>🤖 SMART DRAINAGE ROBOTIC SYSTEM</h1>
-    <div class="subtitle">AI Powered Waste Management</div>
+  <h1>🤖 SMART DRAINAGE ROBOTIC SYSTEM</h1>
+  <p>AI Powered Waste Management</p>
 
-    <div class="btn-container">
-        <button class="btn btn-connect" onclick="connectArduino()">🔌 CONNECT ARDUINO</button>
-        <button class="btn" onclick="toggleDemo()">🧪 TEST DEMO NOW</button>
-    </div>
+  <button id="connectBtn">🔌 CONNECT ARDUINO</button>
+  <button id="testDemoBtn">⚡ TEST DEMO NOW</button>
 
-    <!-- Air Quality Card -->
-    <div class="card">
-        <h3>Air Quality Status</h3>
-        <div id="air-status" class="status-ok">Normal (OK)</div>
-        <div class="icon-box" id="air-icon">🌀</div>
-        <div class="action-text">(Toxic Gas &rarr; Exhaust Fan ON)</div>
-    </div>
+  <!-- Air Quality Status Box -->
+  <div class="status-box">
+    <h3>Air Quality Status</h3>
+    <div id="airStatus" class="status-text" style="color: #4cd137;">Normal (OK)</div>
+    <div class="animated-icon">🌀</div>
+    <p>(Toxic Gas -> Exhaust Fan ON)</p>
+  </div>
 
-    <!-- Drainage Blockage Card -->
-    <div class="card">
-        <h3>Drainage Blockage Status</h3>
-        <div id="block-status" class="status-ok">Clean</div>
-        <div class="icon-box" id="block-icon">🏗️</div>
-        <div class="action-text">(Trash &rarr; Robotic Arm Scoops & Cleans)</div>
-    </div>
+  <!-- Drainage Blockage Status Box -->
+  <div class="status-box">
+    <h3>Drainage Blockage Status</h3>
+    <div id="drainageStatus" class="status-text" style="color: #4cd137;">Clean</div>
+    <div class="animated-icon">🏗️</div>
+    <p>(Trash -> Robotic Arm Scoops & Cleans)</p>
+  </div>
 
-    <script>
-        let demoMode = false;
-        let port;
-        let reader;
-
-        // Web Serial API Function to Connect Arduino via USB/OTG
-        async function connectArduino() {
-            if ('serial' in navigator) {
-                try {
-                    port = await navigator.serial.requestPort();
-                    await port.open({ baudRate: 9600 });
-                    alert("Arduino Connected Successfully!");
-                    readSerialData();
-                } catch (err) {
-                    alert("Connection Failed or Cancelled: " + err);
-                }
-            } else {
-                alert("Web Serial API is not supported on this browser/device. Try Chrome on Desktop or enable WebSerial flags on mobile.");
-            }
-        }
-
-        async function readSerialData() {
-            while (port.readable) {
-                reader = port.readable.getReader();
-                try {
-                    while (true) {
-                        const { value, done } = await reader.read();
-                        if (done) break;
-                        let text = new TextDecoder().decode(value).trim();
-                        processSensorData(text);
-                    }
-                } catch (error) {
-                    console.error(error);
-                } finally {
-                    reader.releaseLock();
-                }
-            }
-        }
-
-        function processSensorData(data) {
-            // Processing Serial Data from Arduino (e.g., "GAS_HIGH" or "BLOCK_DETECTED")
-            if (data.includes("GAS_HIGH")) {
-                document.getElementById('air-status').innerText = "TOXIC GAS DETECTED!";
-                document.getElementById('air-status').className = "status-alert";
-            } else {
-                document.getElementById('air-status').innerText = "Normal (OK)";
-                document.getElementById('air-status').className = "status-ok";
-            }
-
-            if (data.includes("BLOCK_DETECTED")) {
-                document.getElementById('block-status').innerText = "BLOCKAGE DETECTED!";
-                document.getElementById('block-status').className = "status-alert";
-            } else {
-                document.getElementById('block-status').innerText = "Clean";
-                document.getElementById('block-status').className = "status-ok";
-            }
-        }
-
-        // Demo Toggle Function
-        function toggleDemo() {
-            demoMode = !demoMode;
-            if (demoMode) {
-                document.getElementById('air-status').innerText = "TOXIC GAS DETECTED!";
-                document.getElementById('air-status').className = "status-alert";
-                document.getElementById('block-status').innerText = "BLOCKAGE DETECTED!";
-                document.getElementById('block-status').className = "status-alert";
-            } else {
-                document.getElementById('air-status').innerText = "Normal (OK)";
-                document.getElementById('air-status').className = "status-ok";
-                document.getElementById('block-status').innerText = "Clean";
-                document.getElementById('block-status').className = "status-ok";
-            }
-        }
-    </script>
-
+  <script src="script.js"></script>
 </body>
 </html>
